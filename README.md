@@ -27,6 +27,8 @@ language Features that are avaliable in Objective-C, but have extended functiona
 ## Arrays - Map/Reduce/Filter/Flatten
  
 # Cocoa API Differences
+
+## Grand Central Dispatch (GCD)
  
 # Useful Links
 
