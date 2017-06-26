@@ -6,24 +6,25 @@ Swift101
 [LearnXinYminutes](https://learnxinyminutes.com/docs/swift/)
  
 # Language Additions
+New language features within swift that are not avaliable in Objective-C.
 
 ## Optionals
-   
-## Map/Redue/Filter/Flatten
  
 ## First Class Functions
    
 ## Type Safety
 
-# Language Enhancements
+# Language Enhancements/Extensions
+language Features that are avaliable in Objective-C, but have extended functionality in Swift.
 ## Enum
 
 ## Switch
 
-
 ## extensions
     
 ## Protocols
+
+## Arrays - Map/Reduce/Filter/Flatten
  
 # Cocoa API Differences
  
