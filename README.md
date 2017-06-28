@@ -200,7 +200,7 @@ Sometimes if the value isn't there they you should just return, swift provides a
 
 ### `guard`
 
-`guard` is a way to backout of a function without the entire function becoming nested deeper. It can be used the same way `if` can and also allows for unwrapping optionals just like `if let`.
+`guard` is a way to back-out of a function without the entire function becoming nested deeper. It can be used the same way `if` can and also allows for unwrapping optionals just like `if let`.
 
 ``` swift
 func doesSomething(neededVariable: Thing?) {
@@ -254,7 +254,7 @@ guard let value = variable else {
 
 ### Default values
 
-Often when you have an optional value you just want to use a default value if it's nil. To avoid unwrapping just to see if a default value swift allows you to do `nil coalesing`
+Often when you have an optional value you just want to use a default value if it's nil. To avoid unwrapping just to see if a default value swift allows you to do `nil coalescing`
 
 ``` swift
 let nonOptionalVariable = optionalVariable ?? "Default variable"
@@ -308,7 +308,7 @@ This is done using the `bang!` operator (which is an appropriate name in this ca
 let myValue = optionalVariable!
 ```
 
-The operator can also be used for properties on structs and classes that you know will have a value by the time you want to use them, such as `UIViews` on a `UIViewController`, which should not be nil by the time the `viewDidLoad` method is called. This then treats the variable as a normal varibale and the need to unwrap is gone.
+The operator can also be used for properties on structs and classes that you know will have a value by the time you want to use them, such as `UIViews` on a `UIViewController`, which should not be nil by the time the `viewDidLoad` method is called. This then treats the variable as a normal variable and the need to unwrap is gone.
 
 ``` swift
 class viewController: UIViewController {
@@ -321,6 +321,32 @@ class viewController: UIViewController {
 ```
 
 ## First Class Functions
+
+A major difference between Objective-C and Swift is first class functions. What does this mean? It means functions are a type just like `String` and `Int`. That means they can be passed as parameters to other functions, or stored in variables. Functions have a special signature to define themselves, the most basic being `() -> ()` which is a function that takes no parameters and returns nothing. Other examples include:
+
+``` swift
+(String) -> () // Takes a String and return nothing
+(String) -> String // Takes a String and returns a String
+(Int, Int) -> String // Takes two Ints and returns a String
+([Int]) -> [String] // Takes an array of Ints and returns an array of Strings
+(String) -> (String, Int) // Takes a String and returns a Tuple of String and Int
+```
+
+Heres an example of assigning a function to a variable:
+
+``` Swift
+let function: (String) -> (string: String, characterCount: Int) = { value in
+    return (value, value.count)
+}
+```
+
+Slight aside on tuples. A tuple is a grouping of values without the need for a data structure like classes or structs. The can be made by just putting some values in brackets, e.g. `let tuple = (myValue, myOtherValue)`. The values can be accessed by number `tuple.0`. Tuples can also be named e.g. `let stringAndCount = (string: myString, characterCount: myString.count)` and the values can be accessed by name `stringAndCount.characterCount`.
+
+*Back to functions*
+
+
+
+
 
 # Language Enhancements/Extensions
 language Features that are available in Objective-C, but have extended functionality in Swift.
