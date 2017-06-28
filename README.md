@@ -25,7 +25,7 @@ While the equivalent code in Swift does not:
 
 ``` swift
 let thing: Int;
-thing = "Hey" as Int \\ Cannot convert value of type 'String' to type 'Int' in coercion
+thing = "Hey" as Int \\ 🛑 Cannot convert value of type 'String' to type 'Int' in coercion
 ```
 
 This can be overridden with the `bang` operator `!`  however there are only a couple places where this should be used:
@@ -50,7 +50,7 @@ This can be overridden with the `bang` operator `!`  however there are only a co
 
 When possible you should avoid using this operator and explore other methods that are more type safe. There are some examples that can be shown later that show this.
 
-Along with being strict about types swift is also strict about mutability and in some cases requires you to declare methods as `mutating`. Swift has two keywords for declaring objects, `let` and `var`. `let` is for constants and `var` is for variables. 
+Along with being strict about types swift is also strict about mutability and in some cases requires you to declare methods as `mutating`. Swift has two keywords for declarations, `let` and `var`. `let` is for constants and `var` is for variables. 
 
 The recommendation is to use `let` for everything to begin with and switch to `var` if what you are doing is not possible. The main reasons for this are compile time optimisations and object consistency. 
 
@@ -104,6 +104,222 @@ This is much nicer to read.
 
 ## Optionals
 
+Along with swifts strict type safety is its strict declaration of optionals (objects that could be nil). If declaration isn't marked as optional it must have a value before it can be used. If it's property on a class or struct then it must be assigned a value before the initialiser is finished.
+
+Here are some examples:
+
+1. Can't use a variable that isn't optional before it has been assigned a value.
+
+   ``` swift
+    // Doesn't work
+    var myInt: Int
+    print(myInt) // 🛑 Constant 'myInt' used before being initialized
+
+   // Does work
+    var myInt: Int? // Defaults to nil
+    print(myInt) // Works fine
+   ```
+
+2. Properties must be set before initialiser is finished.
+
+   ``` swift
+   // Doesn't work
+   class MyClass {
+       var property: Int
+       init() { } // 🛑 Return from initializer without initializing all stored properties
+   }
+
+   // Does work
+   class MyClass {
+       var property: Int?
+       init() { } // `property` defaults to nil
+   }
+   ```
+
+   Note that with the above examples `var` is used. This is because `let` doesn't default to nil if not assigned because if it was you wouldn't be able to change it later (it can only be assigned once and being assigned nil counts).
+
+
+Under the hood optionals are actually an enum with two cases, `.none` and `.some(wrapped)`. You may notice that `.some(wrapped)` has a variable attached, this is something we will get to later.
+
+### `switch`
+
+Unlike Objective-C swift is very strict about optionals and won't let you use a variable that is optional without first unwrapping it. Since it's an enum this can be done with a switch.
+
+``` swift
+switch myVariable {
+case let .some(wrapped):
+    print("It has the value: \(wrapped)")
+case .none:
+    print("There is no value to be found")
+}
+```
+
+This is quite cumbersome however so swift provides some better ways. 
+
+### `if let`
+
+The first is `if let` which gives you the unwrapped value for use in an if statement.
+
+``` swift
+if let myUnwrappedVariable = myVariable {
+    print("I have the valiable \(myUnwrappedVariable)")
+}
+```
+
+You don't have to make a new name for the variable however. Swift will (within that block) realise the variable isn't nil and treat it as normal.
+
+``` swift
+if let myVariable = myVariable {
+    print("I have the valiable \(myVariable)")
+}
+```
+
+ This structure isn't great if you need to unwrap lots of variables though as you will just end up in nested hell.
+
+``` swift
+if let myVariable = myVariable {
+    if let property = myVariable.property {
+        if let otherProperty = property.otherProperty {
+            // Run code here
+        }
+    }
+}
+```
+
+Fortunately unwraps can be chained meaning you only go one level deep.
+
+``` swift
+if let myVariable = myVariable,
+    let property = myVariable.property,
+    let otherProperty = property.otherProperty {
+    // run code here
+}
+```
+
+Sometimes if the value isn't there they you should just return, swift provides a way to do that as well.
+
+### `guard`
+
+`guard` is a way to backout of a function without the entire function becoming nested deeper. It can be used the same way `if` can and also allows for unwrapping optionals just like `if let`.
+
+``` swift
+func doesSomething(neededVariable: Thing?) {
+    if let myVariable = myVariable,
+        let property = myVariable.property,
+        let otherProperty = property.otherProperty {
+        
+        let anotherThing = otherProperty.doSomething()
+        
+        if let anotherThing = anotherThing,
+            let anotherThingProperty = anotherThing.property,
+            let lastProperty = anotherThingProperty.otherProperty {
+            // Run code two levels deep
+        } else {
+            return
+        }
+        // More code here
+    }
+}
+```
+
+In this example all the code that would run is one or two levels deep in the function which can cause ugly and hard to read code. This doesn't just apply to optionals either, Objective-C can look just as bad when using lots of nested `if`s. This is what `guard` aims to solve. The code above would be come this.
+
+``` swift
+func doesSomething(neededVariable: Thing?) {
+    guard let myVariable = myVariable,
+        let property = myVariable.property,
+        let otherProperty = property.otherProperty else {
+            return
+    }
+    
+    let anotherThing = otherProperty.doSomething()
+    
+    guard let anotherThing = anotherThing,
+        let anotherThingProperty = anotherThing.property,
+        let lastProperty = anotherThingProperty.otherProperty else {
+            return
+    }
+    
+    // More code here
+}
+```
+
+Each piece of code is able to follow on from the last. Guard can also be used to provide more context rather than crashing.
+
+``` swift
+guard let value = variable else {
+    fatalError("The value should not be nil, did you remember to do x?")
+}
+```
+
+### Default values
+
+Often when you have an optional value you just want to use a default value if it's nil. To avoid unwrapping just to see if a default value swift allows you to do `nil coalesing`
+
+``` swift
+let nonOptionalVariable = optionalVariable ?? "Default variable"
+```
+
+### Optional Chaining
+
+Another tool that swift gives you is `optional chaining` which allows you to use variables and there functions as normal but the values returned will be optional and only run if there is variable there but ignored if there isn't. 
+
+This
+
+``` swift
+guard let object = myVariable else { return }
+let someProperty = object.getProperty()
+```
+
+Becomes 
+
+``` swift
+let someProperty = object?.getProperty() // `someProperty` is now an optional
+```
+
+These can be chained and then a nil check can be done at the end rather than at every step.
+
+``` swift
+let property = myVariable?.property
+let otherProperty = property?.otherProperty
+
+let anotherThing = otherProperty?.doSomething()
+let anotherThingProperty = anotherThing?.property
+let lastProperty = anotherThingProperty?.otherProperty
+
+let valueWeWant = lastProperty ?? Thing() // won't be optional because of coalesing
+```
+
+This can be shortened further by putting things onto one line (although it is still best to add some splits for readability).
+
+``` swift
+let otherProperty = myVariable?.property?.otherProperty
+let anotherThing = otherProperty?.doSomething()
+let valueWeWant = anotherThing?.property?.otherProperty ?? Thing() // won't be optional because of coalesing
+```
+
+### Explicit (🚫18+ only🚫)
+
+The last way to unwrap optionals is explicitly. This should be avoided when possible as it is unsafe. At the same time however, it **should** be used if you know a value should be there. This is because it forces the app to crash if there isn't, stopping `defensive programming` and making sure the app is in an expected state.
+
+This is done using the `bang!` operator (which is an appropriate name in this case).
+
+``` swift
+let myValue = optionalVariable!
+```
+
+The operator can also be used for properties on structs and classes that you know will have a value by the time you want to use them, such as `UIViews` on a `UIViewController`, which should not be nil by the time the `viewDidLoad` method is called. This then treats the variable as a normal varibale and the need to unwrap is gone.
+
+``` swift
+class viewController: UIViewController {
+    @IBOutlet var myView: UIView! // notice the `!`
+    
+    override func viewDidLoad() {
+        myView.doSomething() // no need for `?`
+    }
+}
+```
+
 ## First Class Functions
 
 # Language Enhancements/Extensions
@@ -129,3 +345,7 @@ language Features that are available in Objective-C, but have extended functiona
 [Apple Documentation](https://developer.apple.com/library/content/documentation/Swift/Conceptual/Swift_Programming_Language/)
 
 [stack overflow documentation](https://stackoverflow.com/documentation/swift/topics)
+
+ ```
+
+ ```
