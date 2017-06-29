@@ -1,6 +1,8 @@
 Swift101
 ===
 
+[TOC]
+
 # Basics
 
 Before starting we recommend taking a look through the following link which will give you a basic overlook of the language syntax.
@@ -557,7 +559,60 @@ default:
 
 ## Extensions
 
+Extensions, similar to Objective-C's catagory extensions, can be used add new functionality to excisting types. Swift has a few extras that Objective-C doesn't however. Swift is also unique in that the community has gathered around the convention of using extensions for seperating code, rather than shoving it all in to a single class. This doesn't mean seperate files however. We will get to this soon.
+
+First we will start with a simple example of adding a function to a class that we don't own.
+
+``` swift
+extension Array {
+    mutating func move(fromPosistion: Int, toPosistion: Int) {
+        let element = remove(at: fromPosistion)
+        insert(element, at: toPosistion)
+    }
+}
+```
+
+This simple extension adds a move function to arrays that moves an element from one position to another.
+
+Extensions can also be used to add new properties to an excisting type. At the moment these can only be computed properties but there are talks of adding stored properties in future versions (hopefully v5).
+
+``` swift
+extension Bool {
+    var not: Bool {
+        return !self
+    }
+}
+
+if {expression}.not // much nicer than !{expression}
+```
+
+Another thing extensions can be used to add are subscripts.
+
+``` swift
+extension String {
+    subscript(characterIndex: Int) -> Character {
+        return self[index(self.startIndex, offsetBy: characterIndex)]
+    }
+}
+
+let character = "Hello"[2] // 'l'
+```
+
+Initialisers can also be added with extensions. If it is a class you need to add the keyword `convenience` before the `init` keyword. 
+
+``` swift
+extension Bool {
+    init(oppositeOf opposite: Bool) {
+        self.init(opposite.not)
+    }
+}
+```
+
+This extension allows you to make an opposite `Bool` from another `Bool` (or expression that evaluates to a `Bool`).
+
 ## Protocols
+
+// Protocols go here
 
 ## Arrays - Map/Sort/Filter/Reduce/FlatMap
 
