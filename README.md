@@ -344,9 +344,21 @@ Slight aside on tuples. A tuple is a grouping of values without the need for a d
 
 *Back to functions*
 
+As previously mentioned, functions can be passed as arguments to other functions. A common way this is used is as a completion handler for an asynchronous task. A common example is networkings code.
 
+Assume we have a function that logs in a user. It takes a username, password and a completion handler with a bool for success and an optional string error message for when the bool is false. This functions signiture would be the following:
 
+``` Swift
+func loginUser(withUsername: String, password: String, completion: (Bool, String?) -> ())
+```
 
+When calling this function our code would look like this:
+
+``` swift
+loginUser(withUsername: "Test", password: "Test", completion: { (success, errorMessage) in
+    
+})
+```
 
 # Language Enhancements/Extensions
 language Features that are available in Objective-C, but have extended functionality in Swift.
