@@ -390,14 +390,107 @@ UIView.animate(withDuration: 1, animations: {
 }
 ```
 
-# Language Enhancements/Extensions
+# Language Enhancements
 
-language Features that are available in Objective-C, but have extended functionality in Swift.
+While swift has many new things it also has many major advancements on top of existing concepts from Objective-C.
 ## Enum
+
+Enums are the first enhancement we will talk about. They are defined like so:
+
+``` swift
+enum MyEnum {
+	case something
+	case somethingElse
+}
+```
+
+The convention is to use PascalCase for the name of the enum and camelCase for the cases. You can access an enum with dot notation. 
+
+``` swift
+let something = MyEnum.something
+```
+
+Enums can also extend certain types. In Objective-C all enums are `Int`s under the hood but Swift allows them to be `String`s, `Float`s, `Int`s and others. This saves you writing a function that takes an enum case and returns the type you actually want.
+
+Along with this enums can have associated values which can provide extra context to the enum. This saves the need for extra types or tuples and helpes readability. 
+
+A common example of this being used is in network requests. The two cases are usually `success` paired with a piece of data, or `error` paired with an error type of some sort. In Swift this could be expressed in an enum like this:
+
+``` swift
+enum NetworkResult {
+    case success(Item)
+    case error(Error)
+}
+```
+
+These enums are created by providing the value.
+
+``` swift
+let result = NetworkResult.success(item)
+let result = NetworkResult.errror(error)
+```
+
+And then they can be accessed via a `switch`.
+
+``` swift
+switch result {
+case let .success(item):
+    // do stuff with item
+case let .error(error):
+    // do stuff with error
+}
+```
+
+Along with storing values, they can be made generic. The above enum is great if that type of enum is only going to be used once but it's quite common for something to have a success and error. The generic version looks like this:
+
+``` swift
+enum NetworkResult<T> {
+    case success(T)
+    case error(Error)
+}
+```
+
+Then when you use it:
+
+``` swift
+let result = NetworkResult<String>.success("Hello, World!")
+```
+
+On top of this enums can also have both computed properties and functions.
+
+``` swift
+enum Theme {
+    case light, dark
+    
+    var primaryColor: UIColor {
+        switch self {
+        case .light: return .red
+        case .dark: return .blue
+        }
+    }
+    
+    var backgroundColor: UIColor {
+        switch self {
+        case .light: return .white
+        case .dark: return .darkGray
+        }
+    }
+}
+```
+
+This means if you have an instance of the enum you can access these functions and properties.
+
+``` swift
+let currentTheme = Theme.light
+view.backgroundColor = currentTheme.backgroudColor
+view.tintColor = currentTheme.primaryColor
+```
+
+
 
 ## Switch
 
-## extensions
+## Extensions
 
 ## Protocols
 
