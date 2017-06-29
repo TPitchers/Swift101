@@ -486,9 +486,74 @@ view.backgroundColor = currentTheme.backgroudColor
 view.tintColor = currentTheme.primaryColor
 ```
 
-
-
 ## Switch
+
+Unlike switch statemens in other languages that only match a set of things, swifts is a lot more expresive. We have already seen a few switch statements so rather than going over the basics again we will go straight in to the unique parts.
+
+Firstly, switches in swift **must** be exhaustive. This means you either have to have a default or you must cover every case (e.g. every case in an enum).
+
+``` swift
+switch number {
+case 1:
+    number+=1
+case 2:
+    number+=2
+default:
+    break
+}
+```
+
+Secondly, no `break` after each case. Unlike other langauges swifts switches don't implicitly fallthrough.You have to tell it to `fallthrough` yourself.
+
+``` swift
+switch number {
+case 1:
+    number+=1
+    fallthrough
+case 2:
+    number+=2
+    fallthrough
+default:
+    break
+}
+```
+
+If you don't want to run anything in a statement you can call `break` like we do here in the `default` block.
+
+Switches in swift can also match intervals.
+
+``` swift
+switch number {
+case 0..<10:
+    break
+case 10..<100:
+    break
+case 100..<1000:
+    break
+default
+    break
+}
+```
+
+They can also be used to do pattern matching with tuples.
+
+``` swift
+let point = (1,1)
+switch point {
+case (0,0):
+    print("You are in the center")
+case (1..., 1...):
+    print("In the positive in both directions")
+case (1..., _):
+    print("Positive in the X direction")
+case (_, 1...):
+    print("Positive in the Y direction")
+default:
+    print("You're in the negative")
+}
+```
+
+*The `…` here is for ranges. In this case they are open ranges meaning they go from `1` to `∞`.*
 
 ## Extensions
 
