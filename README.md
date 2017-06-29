@@ -390,139 +390,6 @@ UIView.animate(withDuration: 1, animations: {
 }
 ```
 
-### Built-in functions
-
-Swifts basic types come with a lot of built in functions that are extremely helpful. Most of the surround arrays.
-
-#### Map
-
-Map takes an array of one thing and returns array of another thing (or the same thing). It's goal is to replace for loops with a concise function. In the following example we want to get an array of character counts for an array of strings.
-
-``` swift
-let counts = ["Tom", "Torin", "Ricardo"].map { (name) -> Int in
-    return name.count
-}
-```
-
-If the closure is only one line the return can even be emitted.
-
-``` swift
-let counts = ["Tom", "Torin", "Ricardo"].map { (name) -> Int in
-    name.count
-}
-```
-
-**But we can go further!** 
-
-The parameter name can be emitted and replaced with `$0` as that represents the first parameter in a closure (`$1`, `$2` etc. represent following parameters if there are any). Also the return type can be inferred by swift. In this case it's clear we are converting to an `Int`. The final statement becomes this:
-
-``` swift
-let counts = ["Tom", "Torin", "Ricardo"].map { $0.count }
-```
-
-*Beautiful*
-
-This also works on `Dictionary`s  but the result will always be an array. For example:
-
-``` swift
-let contrivedExampleOfNumbersAndStringsForDemo = ["String 1":5, "String 2":3, "String 3":9, "String 4":2]
-let descriptionsOfContrivedExample = contrivedExampleOfNumbersAndStringsForDemo.map { "\($0.key) is \($0.value)" } // result = ["String 2 is 3", "String 3 is 9", "String 1 is 5", "String 4 is 2"]
-```
-
-One thing you will notice from the above is that the results are out of order. This is because `Dictionary` (and also `Set`) are unordered.
-
-If you wish to map only the values of a `Dictionary` and keep the keys the same that is possible with `mapValues` which gives you a `Dictionary` back.
-
-``` swift
-let stringifiedNumbers = contrivedExampleOfNumbersAndStringsForDemo.mapValues { $0*$0 }
-// the numbers have been squared["String 2": 9, "String 3": 81, "String 1": 25, "String 4": 4]
-```
-
-#### Sort
-
-That's enough about map. Next is sort which (as I'm sure you can guess) sorts a collection.
-
-``` Swift
-let ordereredNumbers = [4,1,3,51,12,5,31,8,7].sorted { (number1, number2) -> Bool in
-    number1 < number2
-} // [1, 3, 4, 5, 7, 8, 12, 31, 51]
-```
-
- Of course this can be simplified greatly.
-
-``` swift
-let ordereredNumbers = [4,1,3,51,12,5,31,8,7].sorted { $0 < $1 } // [1, 3, 4, 5, 7, 8, 12, 31, 51]
-```
-
-Actually, since we are sorting `Int`s swift does this for us without needing to do anything.
-
-``` swift
-let ordereredNumbers = [4,1,3,51,12,5,31,8,7].sorted() // [1, 3, 4, 5, 7, 8, 12, 31, 51]
-```
-
-#### Filter
-
-Filter allows you to remove unwanted items from a collection.
-
-``` swift
-let filteredNumbers = [1, 3, 4, 5, 7, 8, 12, 31, 51].filter { (number) -> Bool in
-    number < 10
-} // [1, 3, 4, 5, 7, 8]
-```
-
-Once again, shorter!
-
-``` swift
-let filteredNumbers = [1, 3, 4, 5, 7, 8, 12, 31, 51].filter { $0 < 10 } // [1, 3, 4, 5, 7, 8]
-```
-
-#### Reduce
-
-The aim of reduce is to take a collection and return a single value. For example adding a bunch of numbers together.
-
-``` swift
-let ultimateNumber = [1, 3, 4, 5, 7, 8].reduce(0) { (current, next) -> Int in
-    current + next
-} // 28
-```
-
-The first parameter is the starting value and in each call of the closure you are passed the running total and the next parameter. In this case we are starting from 0 and adding the next value to the running total.
-
-Like the others this function can be shortened, although if you go all the way it can be a little unreadable...
-
-``` swift
-[1, 3, 4, 5, 7, 8].reduce(0, +) // 28
-```
-
-#### FlatMap
-
-The last built in collection function is FlatMap which takes a collection of collections and makes them a single collection.
-
-``` swift
-[["28", "8", "3"], ["19", "4", "9"], ["6",  "13", "5"]].flatMap { (array) -> Array<String> in
-    return array
-} // ["28", "8", "3", "19", "4", "9", "6", "13", "5"]
-```
-
-The shortened one looks like a little nicer.
-
-``` swift
-[["28", "8", "3"], ["19", "4", "9"], ["6",  "13", "5"]].flatMap { $0 } // ["28", "8", "3", "19", "4", "9", "6", "13", "5"]
-```
-
-#### Chain
-
-All of the functions can be combined and run one after the other. In this example we will take a collection of collections of strings and end up with a single number.
-
-``` swift
-let total = initialArray
-    .flatMap { $0 }
-    .map { Int($0) }
-    .flatMap{ $0 } // FlatMap also removes nils from a collection
-    .filter { $0 < 10 ? true : false }
-    .reduce(0) { $0 + $1 } // 35
-```
-
 # Language Enhancements/Extensions
 
 language Features that are available in Objective-C, but have extended functionality in Swift.
@@ -534,7 +401,136 @@ language Features that are available in Objective-C, but have extended functiona
 
 ## Protocols
 
-## Arrays - Map/Reduce/Filter/Flatten
+## Arrays - Map/Sort/Filter/Reduce/FlatMap
+
+#### Map
+
+Map takes an array of one thing and returns array of another thing (or the same thing). It's goal is to replace for loops with a concise function. In the following example we want to get an array of character counts for an array of strings.
+
+```swift
+let counts = ["Tom", "Torin", "Ricardo"].map { (name) -> Int in
+    return name.count
+}
+```
+
+If the closure is only one line the return can even be emitted.
+
+```swift
+let counts = ["Tom", "Torin", "Ricardo"].map { (name) -> Int in
+    name.count
+}
+```
+
+**But we can go further!** 
+
+The parameter name can be emitted and replaced with `$0` as that represents the first parameter in a closure (`$1`, `$2` etc. represent following parameters if there are any). Also the return type can be inferred by swift. In this case it's clear we are converting to an `Int`. The final statement becomes this:
+
+```swift
+let counts = ["Tom", "Torin", "Ricardo"].map { $0.count }
+```
+
+*Beautiful*
+
+This also works on `Dictionary`s  but the result will always be an array. For example:
+
+```swift
+let contrivedExampleOfNumbersAndStringsForDemo = ["String 1":5, "String 2":3, "String 3":9, "String 4":2]
+let descriptionsOfContrivedExample = contrivedExampleOfNumbersAndStringsForDemo.map { "\($0.key) is \($0.value)" } // result = ["String 2 is 3", "String 3 is 9", "String 1 is 5", "String 4 is 2"]
+```
+
+One thing you will notice from the above is that the results are out of order. This is because `Dictionary` (and also `Set`) are unordered.
+
+If you wish to map only the values of a `Dictionary` and keep the keys the same that is possible with `mapValues` which gives you a `Dictionary` back.
+
+```swift
+let stringifiedNumbers = contrivedExampleOfNumbersAndStringsForDemo.mapValues { $0*$0 }
+// the numbers have been squared["String 2": 9, "String 3": 81, "String 1": 25, "String 4": 4]
+```
+
+#### Sort
+
+That's enough about map. Next is sort which (as I'm sure you can guess) sorts a collection.
+
+```Swift
+let ordereredNumbers = [4,1,3,51,12,5,31,8,7].sorted { (number1, number2) -> Bool in
+    number1 < number2
+} // [1, 3, 4, 5, 7, 8, 12, 31, 51]
+```
+
+ Of course this can be simplified greatly.
+
+```swift
+let ordereredNumbers = [4,1,3,51,12,5,31,8,7].sorted { $0 < $1 } // [1, 3, 4, 5, 7, 8, 12, 31, 51]
+```
+
+Actually, since we are sorting `Int`s swift does this for us without needing to do anything.
+
+```swift
+let ordereredNumbers = [4,1,3,51,12,5,31,8,7].sorted() // [1, 3, 4, 5, 7, 8, 12, 31, 51]
+```
+
+#### Filter
+
+Filter allows you to remove unwanted items from a collection.
+
+```swift
+let filteredNumbers = [1, 3, 4, 5, 7, 8, 12, 31, 51].filter { (number) -> Bool in
+    number < 10
+} // [1, 3, 4, 5, 7, 8]
+```
+
+Once again, shorter!
+
+```swift
+let filteredNumbers = [1, 3, 4, 5, 7, 8, 12, 31, 51].filter { $0 < 10 } // [1, 3, 4, 5, 7, 8]
+```
+
+#### Reduce
+
+The aim of reduce is to take a collection and return a single value. For example adding a bunch of numbers together.
+
+```swift
+let ultimateNumber = [1, 3, 4, 5, 7, 8].reduce(0) { (current, next) -> Int in
+    current + next
+} // 28
+```
+
+The first parameter is the starting value and in each call of the closure you are passed the running total and the next parameter. In this case we are starting from 0 and adding the next value to the running total.
+
+Like the others this function can be shortened, although if you go all the way it can be a little unreadable...
+
+```swift
+[1, 3, 4, 5, 7, 8].reduce(0, +) // 28
+```
+
+#### FlatMap
+
+The last built in collection function is FlatMap which takes a collection of collections and makes them a single collection.
+
+```swift
+[["28", "8", "3"], ["19", "4", "9"], ["6",  "13", "5"]].flatMap { (array) -> Array<String> in
+    return array
+} // ["28", "8", "3", "19", "4", "9", "6", "13", "5"]
+```
+
+The shortened one looks like a little nicer.
+
+```swift
+[["28", "8", "3"], ["19", "4", "9"], ["6",  "13", "5"]].flatMap { $0 } // ["28", "8", "3", "19", "4", "9", "6", "13", "5"]
+```
+
+#### Chain
+
+All of the functions can be combined and run one after the other. In this example we will take a collection of collections of strings and end up with a single number.
+
+```swift
+let total = initialArray
+    .flatMap { $0 }
+    .map { Int($0) }
+    .flatMap{ $0 } // FlatMap also removes nils from a collection
+    .filter { $0 < 10 ? true : false }
+    .reduce(0) { $0 + $1 } // 35
+```
 
 # Cocoa API Differences
 
