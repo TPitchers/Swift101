@@ -612,7 +612,221 @@ This extension allows you to make an opposite `Bool` from another `Bool` (or exp
 
 ## Protocols
 
-// Protocols go here
+Protocols in swift offer a lot more flexability when compared to there Objective-C counterpart. Firstly they are classed as types just like structs, classes, etc. Also they are type checked by the compiler to enforce conformance. A disadvantage swift protocols have when compared to Objective-C is the lack of optional methods or parameters, there are a couple work arounds for this though that will be discussed later.
+
+Let's set up an example. We'll start with a `Person` struct.
+
+``` swift
+struct Person {
+    var firstName: String
+    var lastName: String
+    // ...
+}
+```
+
+We want to make our `Person` identifiable in some way, so we will define a protocol for identifiability.	
+
+``` swift
+protocol Identifiable {
+    var identifier: String { get }
+}
+```
+
+This protocol defines a variable called `identifier` property that returns a `String`. We have set the property to only be `get`able, so it can't be set by outside sources. Let's add it to our person.
+
+There are two ways we can do this, the first is to make it the same as any other property.
+
+``` swift
+struct Person: Identifiable {
+    // ...
+    var identifier: String
+    // ...
+}
+```
+
+Even though the protocol only says the property is gettable, because we added it just like we would other properties, we could still set it if we wanted.
+
+``` swift
+var tom = Person(firstName: "Tom", lastName: "String", identifier: "1")
+tom.identifier = "2" // Completely valid
+```
+
+The second way to satisfy the requirement of the protocol is to use a computed property.
+
+``` swift
+extension Person: Identifiable {
+    var identifier: String {
+        return "\(firstName.first!)\(lastName.first!)_\(UUID().uuidString)"
+    }
+}
+```
+
+A couple things to note here. Firstly this is a terrible way to get an identifier because each time it's asked for it will be different. Secondly we are using an extension. In swift the convention is to use extensions in the same file to help seperate the code into clear chunks. This doesn't work for the first option as extensions can't be used to add stored properties but they can be used for functions and computed properties.
+
+A common example of this convention is a `UIViewController` implementing `UITableViewDataSource` and `UITableViewDelegate` in the same file.
+
+``` swift
+class ViewController: UIViewController {
+    
+    // ...
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+    }
+}
+
+extension ViewController: UITableViewDataSource, UITableViewDelegate {
+    func numberOfSections(in tableView: UITableView) -> Int {
+        // ...
+    }
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        // ...
+    }
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        // ...
+    }
+}
+```
+
+This seperates the logic of different parts of the view controller, alleviating some of the massive view controller problems.
+
+Extensions can also be used in another way with protocols, and that's default implementations. This is the first solution to solving the lack of optional methods.
+
+Let's take a common example we all hate with identifying UITableViewCells. It's very common to make the "cell identifier" the same as the name UITableViewCell subclass e.g. `ItemCell` will have the table view identifier `ItemCell`. 
+
+``` swift
+let cell = tableView.dequeueReusableCell(withIdentifier: "ItemCell", for: indexPath)
+```
+
+As good developers we try to avoid rewriting the same string multiple times so we usually define a constant somewhere.
+
+``` swift
+let ItemCellIdentifier = "ItemCell" // at top of file somewhere
+let cell = tableView.dequeueReusableCell(withIdentifier: ItemCellIdentifier, for: indexPath)
+```
+
+This is ugly and just bloats out code. There is a better way. First we will make a change to our `Identifiable` protocol from earlier.
+
+ ``` swift
+protocol Identifiable {
+    static var identifier: String { get }
+}
+ ```
+
+By making the `identifier` property `static` we are saying the type, not an instance needs to have the property. Using our `Identifiable` protocol and default implementations through extensions we can make anything that comforms to `Identifiable` get this for free. 
+
+``` swift
+extension Identifiable {
+    static var identifier: String {
+        return String(describing: self)
+    }
+}
+```
+
+This makes anything that implements identifiable get that behaviour without needing to do it themselves. In our case we want it on UIViews.
+
+``` swift
+extension UIView: Identifiable { }
+```
+
+That single line is all that's needed to make all UIViews return the name of their class as the `identifier` property. Our cell line now looks like this:
+
+``` swift
+let cell = tableView.dequeueReusableCell(withIdentifier: ItemCell.identifier, for: indexPath)
+```
+
+This identifier can also be used for registering a nib.
+
+``` swift
+tableView.register(nib, forCellReuseIdentifier: ItemCell.identifier)
+```
+
+Along with properties methods can be added. Delegation is the most common use case for this, time for another example. Here we have a custom view that appears as a dial with individual steps.
+
+``` swift
+class DialView: UIView {
+    var minValue: Float = 0
+    var maxValue: Float = 1
+    var steps: Int = 10
+    // ...
+}
+```
+
+Now let's add a new dial to our shiny new amp 🎵.
+
+``` swift
+self.volumeDial = Dial()
+volumeDial.minValue = 0
+volumeDial.maxValue = 11 // Turn it up to 11 🤘👅🤘
+volumeDial.steps = 11
+```
+
+Now we want a way to be notified everytime the dial is turned. Protocols to the rescue.
+
+``` swift
+protocol DialViewDelegate {
+    func dialView(_ dialView: DialView, didTurnToValue value: Float)
+}
+```
+
+The naming convention (quite similar to ObjC) is to have the function named the name of the view that the delegate is for (in this case `DialView`). The first parameter should be the `DialView` that called the method so that if the implemented has multiple of the same view you can identify which one sent it (this parameter should be unnamed using `_`, I'll explain this in a sec). The second parameter should allow the function to be identified (in this case it is `didTurnToValue`).
+
+Implemented it looks like this:
+
+``` swift
+class Amp: DialViewDelegate {
+    // ...
+    func dialView(_ dialView: DialView, didTurnToValue value: Float) {
+        self.volume = 11 // Ignore the value given and turn it up to 11 anyway
+    }
+}
+```
+
+The method signiture is something we haven't gone over much yet so now is a good time to explain it. First we have the function name `dialView`. In swift parameters are named just like Objective-C but if we don't want it to be named we can put a `_` character. After that we have the name for use within the function which here is `dialView` followed by a colon and the type `DialView`. Next we have a comma and then it repeats.
+
+The above function would look like this when being called:
+
+``` swift
+delegate.dialView(self, didTurnToValue: 11)
+```
+
+Which reads as "Hey delegate, the dial view `self`(me) turned to value `11`". 
+
+This rule is broken if the delegate function only has 1 parameter and that parameter is the called. For example let's take our `DialView` and its delegate and make it return the number of steps similar to a tableview returning the number of sections. The function is the protocol would look like this:
+
+```  swift
+func numberOfSteps(in dialView: DialView) -> Int
+```
+
+This is because the named parameters cannot provide enough information about the role of the function. Like I mentioned before the `UITableViewDataSource` protocol suffers from this. It has the functions:
+
+``` swift
+func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int
+func numberOfSections(in tableView: UITableView) -> Int
+```
+
+Notice the second one doesn't have the oppertunity to provide the detail of the function in the parameters like the first one does. Out of interest this is what these functions look like when being called:
+
+``` swift
+delegate.numberOfSections(in: self) // how many sections are there in me?
+delegate.tableView(self, numberOfRowsInSection: 1) // in me how many rows are there in section 1
+```
+
+Protocols can also be used to impose initialiser requirements. 
+
+``` swift
+protocol Themeable {
+    init(withTheme theme: Theme)
+}
+```
+
+A problem with using protocols with initialisers is that initialisers in protocol implementations must be required, and required initialsers have to be in the base implementaiton, meaning you can't add a protocol with an initialiser in an extension.
+
+
+
+
+
+
 
 ## Arrays - Map/Sort/Filter/Reduce/FlatMap
 
