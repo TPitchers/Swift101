@@ -614,6 +614,8 @@ This extension allows you to make an opposite `Bool` from another `Bool` (or exp
 
 Protocols in swift offer a lot more flexability when compared to there Objective-C counterpart. Firstly they are classed as types just like structs, classes, etc. Also they are type checked by the compiler to enforce conformance. A disadvantage swift protocols have when compared to Objective-C is the lack of optional methods or parameters, there are a couple work arounds for this though that will be discussed later.
 
+### Properties
+
 Let's set up an example. We'll start with a `Person` struct.
 
 ``` swift
@@ -632,9 +634,9 @@ protocol Identifiable {
 }
 ```
 
-This protocol defines a variable called `identifier` property that returns a `String`. We have set the property to only be `get`able, so it can't be set by outside sources. Let's add it to our person.
+This protocol defines a property called `identifier` that returns a `String`. We have set the property to only be `get`able. This doesn't mean it has to be only gettable, the property can be settable as well but gettable is the minimum.
 
-There are two ways we can do this, the first is to make it the same as any other property.
+There are two ways to implement this, the first is to make it the same as any other property.
 
 ``` swift
 struct Person: Identifiable {
@@ -690,6 +692,8 @@ extension ViewController: UITableViewDataSource, UITableViewDelegate {
 
 This seperates the logic of different parts of the view controller, alleviating some of the massive view controller problems.
 
+### Optional Methods 1
+
 Extensions can also be used in another way with protocols, and that's default implementations. This is the first solution to solving the lack of optional methods.
 
 Let's take a common example we all hate with identifying UITableViewCells. It's very common to make the "cell identifier" the same as the name UITableViewCell subclass e.g. `ItemCell` will have the table view identifier `ItemCell`. 
@@ -702,6 +706,7 @@ As good developers we try to avoid rewriting the same string multiple times so w
 
 ``` swift
 let ItemCellIdentifier = "ItemCell" // at top of file somewhere
+
 let cell = tableView.dequeueReusableCell(withIdentifier: ItemCellIdentifier, for: indexPath)
 ```
 
@@ -740,6 +745,8 @@ This identifier can also be used for registering a nib.
 ``` swift
 tableView.register(nib, forCellReuseIdentifier: ItemCell.identifier)
 ```
+
+### Methods (and the delegate pattern)
 
 Along with properties methods can be added. Delegation is the most common use case for this, time for another example. Here we have a custom view that appears as a dial with individual steps.
 
@@ -812,15 +819,44 @@ delegate.numberOfSections(in: self) // how many sections are there in me?
 delegate.tableView(self, numberOfRowsInSection: 1) // in me how many rows are there in section 1
 ```
 
-Protocols can also be used to impose initialiser requirements. 
+### Initialiser
+
+Protocols can also be used to impose initialiser requirements. Lets update our original `Identifiable` protocol (without the static change) so that we can initialise it with an id.
 
 ``` swift
-protocol Themeable {
-    init(withTheme theme: Theme)
+protocol Identifiable {
+    init?(fromId id: String)
+    var identifier: String { get }
 }
 ```
 
-A problem with using protocols with initialisers is that initialisers in protocol implementations must be required, and required initialsers have to be in the base implementaiton, meaning you can't add a protocol with an initialiser in an extension.
+A problem with using protocols with initialisers is that initialisers in protocol implementations must be required, and required initialsers have to be in the base implementaiton, meaning you can't add a protocol with an initialiser in an extension. You can add them though a subclass but you have to call another initialiser from yours to make sure it's all correctly setup.
+
+I this case we own the orignal struct so it's not a problem.
+
+``` swift
+struct Person: Identifiable {
+    init?(fromId id: String) {
+        guard let details = DBManager.getDetailsForPersonId(id) else {
+            return nil
+        }
+        self.name = details.name
+        self.identifier = id
+    }
+    
+    var identifier: String
+}
+```
+
+Here we have an optional initialiser that checks to see if a database has the details about a person and initialises itself. It's optional because the person might not exist.
+
+### Optional Methods 2
+
+The other way to provide optional methods to protocols is to make the protocol an objective c protocol. It's best to avoid this if possible as it means there are extra hoops for the compiler to go though.
+
+
+
+
 
 
 
